@@ -85,11 +85,15 @@ object IssueObligation {
     }
 
     @InitiatedBy(Initiator::class)
-    class Responder(private val otherFlow: FlowSession) : FlowLogic<SignedTransaction>() {
+    open class Responder(private val otherFlow: FlowSession) : FlowLogic<SignedTransaction>() {
         @Suspendable
         override fun call(): SignedTransaction {
             val stx = subFlow(SignTxFlowNoChecking(otherFlow))
             return waitForLedgerCommit(stx.id)
+        }
+
+        open fun validateRules() {
+            println("I am in Responder")
         }
     }
 }

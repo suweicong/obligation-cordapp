@@ -1,8 +1,10 @@
 package net.corda.examples.obligation.flows
 
+import net.corda.core.flows.FlowSession
+import net.corda.core.flows.InitiatedBy
 import net.corda.examples.obligation.Obligation
 import net.corda.finance.POUNDS
-import net.corda.testing.core.chooseIdentity
+import net.corda.testing.internal.chooseIdentity
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -21,8 +23,16 @@ class IssueObligationTests : ObligationTests() {
     }
 
 
+    @InitiatedBy(IssueObligation.Initiator::class)
+    class Mock1Responder(private val otherFlow: FlowSession) : IssueObligation.Responder(otherFlow) {
+        override fun validateRules() {
+            println("I am in Mock1Responder")
+        }
+    }
+
     @Test
     fun `issue anonymous obligation successfully`() {
+        a.registerInitiatedFlow(Mock1Responder::class.java)
         val stx = issueObligation(a, b, 1000.POUNDS)
 
         val aIdentity = a.services.myInfo.chooseIdentity()
