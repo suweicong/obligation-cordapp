@@ -1,60 +1,48 @@
 package net.corda.examples.obligation.flows
 
-import net.corda.core.flows.FlowSession
-import net.corda.core.flows.InitiatedBy
+import net.corda.core.node.services.queryBy
 import net.corda.examples.obligation.Obligation
 import net.corda.finance.POUNDS
-import net.corda.testing.internal.chooseIdentity
 import org.junit.Test
-import kotlin.test.assertEquals
+import com.andreapivetta.kolor.yellow
 
 class IssueObligationTests : ObligationTests() {
 
     @Test
-    fun `Issue non-anonymous obligation successfully`() {
-        val stx = issueObligation(a, b, 1000.POUNDS, anonymous = false)
+    fun `Issue non-anonymous obligation successfully with string`() {
+        try {
+            val stx = issueObligation(a, b, 1000.POUNDS, anonymous = false, something = "validString")
+            network.waitQuiescent()
 
-        network.waitQuiescent()
+        } finally {
+            a.transaction {
+                val result = a.services.vaultService.queryBy<Obligation>().states
+                println("A vault query unconsumed : $result".yellow())
+            }
 
-        val aObligation = a.services.loadState(stx.tx.outRef<Obligation>(0).ref).data as Obligation
-        val bObligation = b.services.loadState(stx.tx.outRef<Obligation>(0).ref).data as Obligation
-
-        assertEquals(aObligation, bObligation)
-    }
-
-
-    @InitiatedBy(IssueObligation.Initiator::class)
-    class Mock1Responder(private val otherFlow: FlowSession) : IssueObligation.Responder(otherFlow) {
-        override fun validateRules() {
-            println("I am in Mock1Responder")
+            b.transaction {
+                val result = b.services.vaultService.queryBy<Obligation>().states
+                println("B vault query unconsumed : $result".yellow())
+            }
         }
     }
 
     @Test
-    fun `issue anonymous obligation successfully`() {
-        a.registerInitiatedFlow(Mock1Responder::class.java)
-        val stx = issueObligation(a, b, 1000.POUNDS)
+    fun `Issue non-anonymous obligation successfully with null`() {
+        try {
+            val stx = issueObligation(a, b, 1000.POUNDS, anonymous = false, something = null)
+            network.waitQuiescent()
 
-        val aIdentity = a.services.myInfo.chooseIdentity()
-        val bIdentity = b.services.myInfo.chooseIdentity()
+        } finally {
+            a.transaction {
+                val result = a.services.vaultService.queryBy<Obligation>().states
+                println("A vault query unconsumed : $result".yellow())
+            }
 
-        network.waitQuiescent()
-
-        val aObligation = a.services.loadState(stx.tx.outRef<Obligation>(0).ref).data as Obligation
-        val bObligation = b.services.loadState(stx.tx.outRef<Obligation>(0).ref).data as Obligation
-
-        assertEquals(aObligation, bObligation)
-
-        val maybePartyALookedUpByA = a.services.identityService.requireWellKnownPartyFromAnonymous(aObligation.borrower)
-        val maybePartyALookedUpByB = b.services.identityService.requireWellKnownPartyFromAnonymous(aObligation.borrower)
-
-        assertEquals(aIdentity, maybePartyALookedUpByA)
-        assertEquals(aIdentity, maybePartyALookedUpByB)
-
-        val maybePartyCLookedUpByA = a.services.identityService.requireWellKnownPartyFromAnonymous(aObligation.lender)
-        val maybePartyCLookedUpByB = b.services.identityService.requireWellKnownPartyFromAnonymous(aObligation.lender)
-
-        assertEquals(bIdentity, maybePartyCLookedUpByA)
-        assertEquals(bIdentity, maybePartyCLookedUpByB)
+            b.transaction {
+                val result = b.services.vaultService.queryBy<Obligation>().states
+                println("B vault query unconsumed : $result".yellow())
+            }
+        }
     }
 }

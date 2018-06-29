@@ -3,8 +3,6 @@ package net.corda.examples.obligation.flows
 import junit.framework.Assert.assertEquals
 import net.corda.core.contracts.withoutIssuer
 import net.corda.core.flows.FlowException
-import net.corda.core.flows.FlowSession
-import net.corda.core.flows.InitiatedBy
 import net.corda.examples.obligation.Obligation
 import net.corda.finance.POUNDS
 import net.corda.finance.contracts.asset.Cash
@@ -23,16 +21,8 @@ class SettleObligationTests : ObligationTests() {
         }
     }
 
-    @InitiatedBy(IssueObligation.Initiator::class)
-    class Mock2Responder(private val otherFlow: FlowSession) : IssueObligation.Responder(otherFlow) {
-        override fun validateRules() {
-            println("I am in Mock2Responder")
-        }
-    }
-
     @org.junit.Test
     fun `Settle flow can only be started by borrower`() {
-        a.registerInitiatedFlow(Mock2Responder::class.java)
         // Issue obligation.
         val issuanceTransaction = issueObligation(a, b, 1000.POUNDS, anonymous = false)
         network.waitQuiescent()
