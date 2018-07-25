@@ -21,7 +21,7 @@ object IssueObligation {
     class Initiator(private val amount: Amount<Currency>,
                     private val lender: Party,
                     private val anonymous: Boolean = true,
-                    private val something : String? = null) : ObligationBaseFlow() {
+                    private val remark : String? = null) : ObligationBaseFlow() {
 
         companion object {
             object INITIALISING : Step("Performing initial steps.")
@@ -43,7 +43,7 @@ object IssueObligation {
         override fun call(): SignedTransaction {
             // Step 1. Initialisation.
             progressTracker.currentStep = INITIALISING
-            val obligation = if (anonymous) createAnonymousObligation() else Obligation(amount, lender, ourIdentity, something)
+            val obligation = if (anonymous) createAnonymousObligation() else Obligation(amount, lender, ourIdentity, remark)
             val ourSigningKey = obligation.borrower.owningKey
 
             // Step 2. Building.
@@ -81,20 +81,16 @@ object IssueObligation {
             val anonymousMe = txKeys[ourIdentity] ?: throw FlowException("Couldn't create our conf. identity.")
             val anonymousLender = txKeys[lender] ?: throw FlowException("Couldn't create lender's conf. identity.")
 
-            return Obligation(amount, anonymousLender, anonymousMe, something)
+            return Obligation(amount, anonymousLender, anonymousMe, remark)
         }
     }
 
     @InitiatedBy(Initiator::class)
-    open class Responder(private val otherFlow: FlowSession) : FlowLogic<SignedTransaction>() {
+    class Responder(private val otherFlow: FlowSession) : FlowLogic<SignedTransaction>() {
         @Suspendable
         override fun call(): SignedTransaction {
             val stx = subFlow(SignTxFlowNoChecking(otherFlow))
             return waitForLedgerCommit(stx.id)
-        }
-
-        open fun validateRules() {
-            println("I am in Responder")
         }
     }
 }

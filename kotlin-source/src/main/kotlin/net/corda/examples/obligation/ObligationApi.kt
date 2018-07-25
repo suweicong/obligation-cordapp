@@ -90,6 +90,7 @@ class ObligationApi(val rpcOps: CordaRPCOps) {
     @Path("issue-obligation")
     fun issueObligation(@QueryParam(value = "amount") amount: Int,
                         @QueryParam(value = "currency") currency: String,
+                        @QueryParam(value = "remark") remark: String? = null,
                         @QueryParam(value = "party") party: String): Response {
         // 1. Get party objects for the counterparty.
         val lenderIdentity = rpcOps.partiesFromName(party, exactMatch = false).singleOrNull()
@@ -104,8 +105,8 @@ class ObligationApi(val rpcOps: CordaRPCOps) {
                     IssueObligation.Initiator::class.java,
                     issueAmount,
                     lenderIdentity,
-                    true
-            )
+                    false,
+                    remark)
 
             val result = flowHandle.use { it.returnValue.getOrThrow() }
             CREATED to "Transaction id ${result.id} committed to ledger.\n${result.tx.outputs.single().data}"
@@ -146,6 +147,7 @@ class ObligationApi(val rpcOps: CordaRPCOps) {
     @Path("settle-obligation")
     fun settleObligation(@QueryParam(value = "id") id: String,
                          @QueryParam(value = "amount") amount: Int,
+                         @QueryParam(value = "remark") remark: String,
                          @QueryParam(value = "currency") currency: String): Response {
         val linearId = UniqueIdentifier.fromString(id)
         val settleAmount = Amount(amount.toLong() * 100, Currency.getInstance(currency))
@@ -155,8 +157,8 @@ class ObligationApi(val rpcOps: CordaRPCOps) {
                     SettleObligation.Initiator::class.java,
                     linearId,
                     settleAmount,
-                    true
-            )
+                    false,
+                    remark)
 
             flowHandle.use { flowHandle.returnValue.getOrThrow() }
             CREATED to "$amount $currency paid off on obligation id $id."

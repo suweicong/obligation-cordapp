@@ -19,7 +19,7 @@ import javax.persistence.Table
 data class Obligation(val amount: Amount<Currency>,
                       val lender: AbstractParty,
                       val borrower: AbstractParty,
-                      val something : String? = null,
+                      val remark : String? = null,
                       val paid: Amount<Currency> = Amount(0, amount.token),
                       override val linearId: UniqueIdentifier = UniqueIdentifier()) : LinearState, QueryableState {
 
@@ -43,7 +43,8 @@ data class Obligation(val amount: Amount<Currency>,
             is ObligationSchemaV1 -> {
                 return ObligationSchemaV1.ObligationEntity(
                         linearId = linearId.id.toString(),
-                        something = something)
+                        amount = amount.quantity,
+                        remark = remark)
             }
         /** Additional schema mappings would be added here */
             else -> throw IllegalArgumentException("Unrecognised schema $schema")
@@ -66,8 +67,11 @@ object ObligationSchemaV1 : MappedSchema(schemaFamily = ObligationSchema.javaCla
             @Column(name = "linear_id")
             var linearId: String? = null,
 
-            @Column(name = "something", nullable = false)
-            var something: String? = null
+            @Column(name = "amount")
+            var amount: Long? = null,
+
+            @Column(name = "remark")
+            var remark: String? = null
 
     ) : PersistentState()
 }
