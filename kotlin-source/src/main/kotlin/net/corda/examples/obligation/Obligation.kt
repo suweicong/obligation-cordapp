@@ -6,6 +6,9 @@ import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.NullKeys
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
+import net.corda.core.schemas.MappedSchema
+import net.corda.core.schemas.PersistentState
+import net.corda.core.schemas.QueryableState
 import net.corda.core.utilities.toBase58String
 import java.util.*
 
@@ -13,7 +16,9 @@ data class Obligation(val amount: Amount<Currency>,
                       val lender: AbstractParty,
                       val borrower: AbstractParty,
                       val paid: Amount<Currency> = Amount(0, amount.token),
+                      val childrenUUIDs : Set<UniqueIdentifier>? = null ,
                       override val linearId: UniqueIdentifier = UniqueIdentifier()) : LinearState {
+
 
     override val participants: List<AbstractParty> get() = listOf(lender, borrower)
 

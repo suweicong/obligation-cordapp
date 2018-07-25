@@ -3,6 +3,7 @@ package net.corda.examples.obligation.flows
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.confidential.SwapIdentitiesFlow
 import net.corda.core.contracts.Amount
+import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
@@ -80,7 +81,7 @@ object IssueObligation {
             val anonymousMe = txKeys[ourIdentity] ?: throw FlowException("Couldn't create our conf. identity.")
             val anonymousLender = txKeys[lender] ?: throw FlowException("Couldn't create lender's conf. identity.")
 
-            return Obligation(amount, anonymousLender, anonymousMe)
+            return Obligation(amount, anonymousLender, anonymousMe, childrenUUIDs =  setOf(UniqueIdentifier(), UniqueIdentifier(), UniqueIdentifier()))
         }
     }
 
