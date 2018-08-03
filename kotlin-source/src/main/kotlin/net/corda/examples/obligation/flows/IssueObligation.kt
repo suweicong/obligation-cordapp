@@ -41,6 +41,8 @@ object IssueObligation {
 
         @Suspendable
         override fun call(): SignedTransaction {
+            require(remark!=null){ "Invalid string." }
+
             // Step 1. Initialisation.
             progressTracker.currentStep = INITIALISING
             val obligation = if (anonymous) createAnonymousObligation() else Obligation(amount, lender, ourIdentity, remark)
