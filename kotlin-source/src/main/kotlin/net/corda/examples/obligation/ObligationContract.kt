@@ -15,6 +15,7 @@ class ObligationContract : Contract {
 
     interface Commands : CommandData {
         class Issue : TypeOnlyCommandData(), Commands
+        class Nothing : TypeOnlyCommandData(), Commands
         class Transfer : TypeOnlyCommandData(), Commands
         class Settle : TypeOnlyCommandData(), Commands
     }
@@ -24,6 +25,7 @@ class ObligationContract : Contract {
         val setOfSigners = command.signers.toSet()
         when (command.value) {
             is Commands.Issue -> verifyIssue(tx, setOfSigners)
+            is Commands.Nothing -> Unit
             is Commands.Transfer -> verifyTransfer(tx, setOfSigners)
             is Commands.Settle -> verifySettle(tx, setOfSigners)
             else -> throw IllegalArgumentException("Unrecognised command.")
