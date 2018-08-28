@@ -23,12 +23,6 @@ class SettleObligationTests : ObligationTests() {
         }
     }
 
-    @InitiatedBy(IssueObligation.Initiator::class)
-    class Mock2Responder(private val otherFlow: FlowSession) : IssueObligation.Responder(otherFlow) {
-        override fun validateRules() {
-            println("I am in Mock2Responder")
-        }
-    }
 
     @org.junit.Test
     fun `Settle flow can only be started by borrower`() {

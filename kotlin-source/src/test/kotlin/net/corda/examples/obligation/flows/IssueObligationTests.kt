@@ -30,9 +30,18 @@ class IssueObligationTests : ObligationTests() {
         }
     }
 
+    @InitiatedBy(IssueObligation.Initiator::class)
+    class Mock2Responder(private val otherFlow: FlowSession) : IssueObligation.Responder(otherFlow) {
+        override fun validateRules() {
+            println("I am in Mock2Responder")
+        }
+    }
+
     @Test
     fun `issue anonymous obligation successfully`() {
         a.registerInitiatedFlow(Mock1Responder::class.java)
+        a.registerInitiatedFlow(Mock2Responder::class.java)
+
         val stx = issueObligation(a, b, 1000.POUNDS)
 
         val aIdentity = a.services.myInfo.chooseIdentity()
