@@ -1,7 +1,7 @@
 package contract.states.v2
 
+import com.base.ObligationDefinition
 import net.corda.core.contracts.Amount
-import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.crypto.NullKeys
 import net.corda.core.identity.AbstractParty
@@ -16,18 +16,18 @@ import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.Table
 
-data class ObligationV2(val amount: Amount<Currency>,
-                      val lender: AbstractParty,
-                      val borrower: AbstractParty,
-                      val remark : String? = null,
-                      val paid: Amount<Currency> = Amount(0, amount.token),
-                      override val linearId: UniqueIdentifier = UniqueIdentifier()) : LinearState, QueryableState {
+data class ObligationV2(override val amount: Amount<Currency>,
+                        override val lender: AbstractParty,
+                        override val borrower: AbstractParty,
+                        override val remark : String? = null,
+                        override val paid: Amount<Currency> = Amount(0, amount.token),
+                      override val linearId: UniqueIdentifier = UniqueIdentifier()) : ObligationDefinition, QueryableState {
 
     override val participants: List<AbstractParty> get() = listOf(lender, borrower)
 
-    fun pay(amountToPay: Amount<Currency>) = copy(paid = paid + amountToPay)
-    fun withNewLender(newLender: AbstractParty) = copy(lender = newLender)
-    fun withoutLender() = copy(lender = NullKeys.NULL_PARTY)
+    override fun pay(amountToPay: Amount<Currency>) = copy(paid = paid + amountToPay)
+    override fun withNewLender(newLender: AbstractParty) = copy(lender = newLender)
+    override fun withoutLender() = copy(lender = NullKeys.NULL_PARTY)
 
     override fun toString(): String {
         val lenderString = (lender as? Party)?.name?.organisation ?: lender.owningKey.toBase58String()
