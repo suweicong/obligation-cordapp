@@ -1,3 +1,7 @@
-rootProject.name = 'obligation'
-include 'kotlin-source'
-include 'java-source'
+//include 'kotlin-source'
+include 'contract-states'
+include 'contract-states-v2'
+include 'flow'
+include 'flow-v2'
+include 'api'
+

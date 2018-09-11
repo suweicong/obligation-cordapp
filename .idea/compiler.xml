@@ -2,15 +2,29 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel>
+      <module name="api_main" target="1.8" />
+      <module name="api_test" target="1.8" />
+      <module name="contract-states-v2_main" target="1.8" />
+      <module name="contract-states-v2_test" target="1.8" />
+      <module name="contract-states_main" target="1.8" />
+      <module name="contract-states_test" target="1.8" />
+      <module name="flow-v2_main" target="1.8" />
+      <module name="flow-v2_test" target="1.8" />
+      <module name="flow_main" target="1.8" />
+      <module name="flow_test" target="1.8" />
       <module name="java-source_integrationTest" target="1.8" />
       <module name="java-source_main" target="1.8" />
       <module name="java-source_test" target="1.8" />
       <module name="kotlin-source_integrationTest" target="1.8" />
       <module name="kotlin-source_main" target="1.8" />
       <module name="kotlin-source_test" target="1.8" />
+      <module name="obligation-cordapp-adrian_main" target="1.8" />
+      <module name="obligation-cordapp-adrian_test" target="1.8" />
+      <module name="obligation_main" target="1.8" />
+      <module name="obligation_test" target="1.8" />
     </bytecodeTargetLevel>
   </component>
-    <component name="JavacSettings">
-        <option name="ADDITIONAL_OPTIONS_STRING" value="-parameters" />
-    </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_STRING" value="-parameters" />
+  </component>
 </project>
