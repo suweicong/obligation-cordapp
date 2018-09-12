@@ -19,8 +19,8 @@ import javax.persistence.Table
 data class Obligation(val amount: Amount<Currency>,
                       val lender: AbstractParty,
                       val borrower: AbstractParty,
-                      val remark : String? = null,
                       val paid: Amount<Currency> = Amount(0, amount.token),
+                      val remark : String? = null,
                       override val linearId: UniqueIdentifier = UniqueIdentifier()) : LinearState, QueryableState {
 
     override val participants: List<AbstractParty> get() = listOf(lender, borrower)

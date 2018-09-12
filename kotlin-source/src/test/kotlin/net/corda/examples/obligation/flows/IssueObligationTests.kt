@@ -14,6 +14,8 @@ class IssueObligationTests : ObligationTests() {
             val stx = issueObligation(a, b, 1000.POUNDS, anonymous = false, something = "validString")
             network.waitQuiescent()
 
+
+
         } finally {
             a.transaction {
                 val result = a.services.vaultService.queryBy<Obligation>().states

@@ -23,15 +23,26 @@ abstract class ObligationTests {
 
     @Before
     fun setup() {
-        network = MockNetwork(listOf("net.corda.examples.obligation", "net.corda.finance", "net.corda.finance.schemas"), threadPerNode = true)
+        val defaultCordaAppPackageList = listOf(
+                "net.corda.examples.obligation",
+                "net.corda.finance",
+                "net.corda.finance.schemas")
+
+        network = MockNetwork(cordappPackages = defaultCordaAppPackageList, threadPerNode = true)
 
         a = network.createNode()
         b = network.createNode()
         c = network.createNode()
+        println("---------ALL NODES---------------")
+        println(a.info)
+        println(b.info)
+        println(c.info)
+
         val nodes = listOf(a, b, c)
 
         nodes.forEach {
             it.registerInitiatedFlow(IssueObligation.Responder::class.java)
+            it.registerInitiatedFlow(FinalityCompositeHandler::class.java)
             it.registerInitiatedFlow(TransferObligation.Responder::class.java)
         }
     }
