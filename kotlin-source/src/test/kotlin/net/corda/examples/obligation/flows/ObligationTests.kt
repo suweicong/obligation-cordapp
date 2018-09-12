@@ -10,6 +10,7 @@ import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.StartedMockNode
 import org.junit.After
 import org.junit.Before
+import java.time.Instant
 import java.util.*
 
 /**
@@ -45,10 +46,18 @@ abstract class ObligationTests {
                                   lender: StartedMockNode,
                                   amount: Amount<Currency>,
                                   anonymous: Boolean = true,
-                                  something : String? = null
+                                  remark: String? = null,
+                                  releaseTime: Instant? = null,
+                                  secret: String? = null
     ): net.corda.core.transactions.SignedTransaction {
         val lenderIdentity = lender.info.chooseIdentity()
-        val flow = IssueObligation.Initiator(amount, lenderIdentity, anonymous, something)
+        val flow = IssueObligation.Initiator(
+                amount = amount,
+                lender = lenderIdentity,
+                anonymous = anonymous,
+                remark = remark,
+                releaseTime = releaseTime,
+                secret = secret)
         return borrower.startFlow(flow).getOrThrow()
     }
 
@@ -79,5 +88,19 @@ abstract class ObligationTests {
         val issueRequest = CashIssueFlow.IssueRequest(amount, issueRef, notary)
         val flow = CashIssueFlow(issueRequest)
         return party.startFlow(flow).getOrThrow().stx
+    }
+
+    protected fun redeemObligation(linearId: UniqueIdentifier,
+                                   lender: StartedMockNode,
+                                   anonymous: Boolean = true,
+                                   secret: String
+    ): net.corda.core.transactions.SignedTransaction {
+
+        val flow = RedeemObligationFlow.Initiator(
+                linearId,
+                secret,
+                anonymous)
+
+        return lender.startFlow(flow).getOrThrow()
     }
 }

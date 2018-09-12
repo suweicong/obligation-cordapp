@@ -11,7 +11,7 @@ class IssueObligationTests : ObligationTests() {
     @Test
     fun `Issue non-anonymous obligation successfully with string`() {
         try {
-            val stx = issueObligation(a, b, 1000.POUNDS, anonymous = false, something = "validString")
+            val stx = issueObligation(a, b, 1000.POUNDS, anonymous = false, remark = "validString")
             network.waitQuiescent()
 
         } finally {
@@ -30,7 +30,7 @@ class IssueObligationTests : ObligationTests() {
     @Test
     fun `Issue non-anonymous obligation successfully with null`() {
         try {
-            val stx = issueObligation(a, b, 1000.POUNDS, anonymous = false, something = null)
+            val stx = issueObligation(a, b, 1000.POUNDS, anonymous = false, remark = null)
             network.waitQuiescent()
 
         } finally {

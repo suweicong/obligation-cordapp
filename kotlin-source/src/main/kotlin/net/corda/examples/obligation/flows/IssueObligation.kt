@@ -3,16 +3,19 @@ package net.corda.examples.obligation.flows
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.confidential.SwapIdentitiesFlow
 import net.corda.core.contracts.Amount
+import net.corda.core.crypto.sha256
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
+import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.ProgressTracker
 import net.corda.core.utilities.ProgressTracker.Step
 import net.corda.core.utilities.seconds
 import net.corda.examples.obligation.Obligation
 import net.corda.examples.obligation.ObligationContract
 import net.corda.examples.obligation.ObligationContract.Companion.OBLIGATION_CONTRACT_ID
+import java.time.Instant
 import java.util.*
 
 object IssueObligation {
@@ -21,7 +24,9 @@ object IssueObligation {
     class Initiator(private val amount: Amount<Currency>,
                     private val lender: Party,
                     private val anonymous: Boolean = true,
-                    private val remark : String? = null) : ObligationBaseFlow() {
+                    private val remark : String? = null,
+                    private val releaseTime : Instant? = null,
+                    private val secret : String? = null) : ObligationBaseFlow() {
 
         companion object {
             object INITIALISING : Step("Performing initial steps.")
@@ -43,7 +48,10 @@ object IssueObligation {
         override fun call(): SignedTransaction {
             // Step 1. Initialisation.
             progressTracker.currentStep = INITIALISING
-            val obligation = if (anonymous) createAnonymousObligation() else Obligation(amount, lender, ourIdentity, remark)
+            val obligation = if (anonymous) createAnonymousObligation() else
+                Obligation(amount, lender, ourIdentity, remark, releaseTime =  releaseTime, hashedSecret = secret?.toByteArray()?.sha256())
+
+
             val ourSigningKey = obligation.borrower.owningKey
 
             // Step 2. Building.
@@ -80,8 +88,7 @@ object IssueObligation {
 
             val anonymousMe = txKeys[ourIdentity] ?: throw FlowException("Couldn't create our conf. identity.")
             val anonymousLender = txKeys[lender] ?: throw FlowException("Couldn't create lender's conf. identity.")
-
-            return Obligation(amount, anonymousLender, anonymousMe, remark)
+            return Obligation(amount, anonymousLender, anonymousMe, releaseTime =  releaseTime, hashedSecret = secret?.toByteArray()?.sha256())
         }
     }
 

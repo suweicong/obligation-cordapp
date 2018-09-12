@@ -86,8 +86,8 @@ class ObligationContractTransferTests : ObligationContractUnitTests() {
                 this `fails with` "Only the lender property may change."
             }
             transaction {
-                input(OBLIGATION_CONTRACT_ID, Obligation(10.DOLLARS, alice.party, bob.party, 5.DOLLARS))
-                output(OBLIGATION_CONTRACT_ID, Obligation(10.DOLLARS, alice.party, bob.party, 10.DOLLARS))
+                input(OBLIGATION_CONTRACT_ID, Obligation(10.DOLLARS, alice.party, bob.party, null, 5.DOLLARS))
+                output(OBLIGATION_CONTRACT_ID, Obligation(10.DOLLARS, alice.party, bob.party, null, 10.DOLLARS))
                 command(listOf(alice.publicKey, bob.publicKey, charlie.publicKey), ObligationContract.Commands.Transfer())
                 this `fails with` "Only the lender property may change."
             }

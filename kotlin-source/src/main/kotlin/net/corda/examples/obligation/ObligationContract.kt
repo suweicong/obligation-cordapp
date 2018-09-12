@@ -1,10 +1,13 @@
 package net.corda.examples.obligation
 
 import net.corda.core.contracts.*
+import net.corda.core.crypto.sha256
 import net.corda.core.transactions.LedgerTransaction
+import net.corda.core.utilities.OpaqueBytes
 import net.corda.finance.contracts.asset.Cash
 import net.corda.finance.utils.sumCash
 import java.security.PublicKey
+import java.util.*
 
 class ObligationContract : Contract {
 
@@ -17,6 +20,8 @@ class ObligationContract : Contract {
         class Issue : TypeOnlyCommandData(), Commands
         class Transfer : TypeOnlyCommandData(), Commands
         class Settle : TypeOnlyCommandData(), Commands
+        class Redeem(val secret: OpaqueBytes) : TypeOnlyCommandData(), Commands
+        //TODO: add a cancel command to cancel obligation if now() > releaseTime && paidAmount == 0
     }
 
     override fun verify(tx: LedgerTransaction): Unit {
@@ -26,6 +31,7 @@ class ObligationContract : Contract {
             is Commands.Issue -> verifyIssue(tx, setOfSigners)
             is Commands.Transfer -> verifyTransfer(tx, setOfSigners)
             is Commands.Settle -> verifySettle(tx, setOfSigners)
+            is Commands.Redeem -> verifyRedeem(tx, setOfSigners)
             else -> throw IllegalArgumentException("Unrecognised command.")
         }
     }
@@ -103,5 +109,23 @@ class ObligationContract : Contract {
         // Checks the required parties have signed.
         "Both lender and borrower together only must sign obligation settle transaction." using
                 (signers == keysFromParticipants(inputObligation))
+    }
+
+    // This only allows one obligation redemption per transaction.
+    private fun verifyRedeem(tx: LedgerTransaction, signers: Set<PublicKey>) = requireThat {
+        // This act like a typical obligation settlement
+        verifySettle(tx, signers)
+        val redeemCommand = tx.commandsOfType<Commands.Redeem>().single()
+
+        // While settle is initiated by the borrower, this redemption is initiated by the lender, secret must be correct.
+        val obligationIn = tx.inputsOfType<Obligation>().single()
+        val secret = redeemCommand.value.secret
+
+        val computedSecretHash = secret.sha256().bytes
+        val expectedSecretHash = obligationIn.hashedSecret?.bytes
+
+        "Expected secret mush not be null." using (expectedSecretHash != null)
+        "Secret must be correct." using (Arrays.equals(computedSecretHash, expectedSecretHash))
+        "Time must be before releaseTime." using (tx.timeWindow!!.untilTime!! < obligationIn.releaseTime)
     }
 }
