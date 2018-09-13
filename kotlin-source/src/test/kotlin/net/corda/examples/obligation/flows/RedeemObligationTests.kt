@@ -24,7 +24,7 @@ class RedeemObligationTests : ObligationTests() {
                     remark = "validString",
                     releaseTime = future,
                     secret = "correctSecret")
-            
+
             network.waitQuiescent()
 
             val linearId = stx.tx.outputsOfType<Obligation>().single().linearId
