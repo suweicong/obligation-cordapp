@@ -14,24 +14,24 @@ Hashed Timelock Contract (HTLC) allows the movement of asset from one DLT to ano
 3. Party A will also send the secret to Party C's off-ledger.
 4. Party B will send the ID and hashed secret taken from the obligation and sends it to its own off-ledger.
 5. Party B off-ledger will forward the ID and hashed secret to Party B's non-corda node. 
-6. **Non-Corda**Party B node will lock some cash with the ID and hashed secret. 
-7. **Non-Corda**Party C will propose to unlock and redeem the cash with the ID and secret taken from the off-ledger.
-8. **Non-Corda**Party B will receive the secret in exchange for the cash he transferred to Party C in the non-corda network.
-9. **Non-Corda**Party B will send the secret to its off-ledger where it will be forwarded to its own **Corda** Party B node.
+6. **Non-Corda** Party B node will lock some cash with the ID and hashed secret. 
+7. **Non-Corda** Party C will propose to unlock and redeem the cash with the ID and secret taken from the off-ledger.
+8. **Non-Corda** Party B will receive the secret in exchange for the cash he transferred to Party C in the non-corda network.
+9. **Non-Corda** Party B will send the secret to its off-ledger where it will be forwarded to its own **Corda** Party B node.
 10. Party B will propose to redeem the obligation by providing the ID and secret in exchange for Party A's cash.
 11. The obligation will be settled and cash will be transferred from Party A to Party B's balance.
 
 # TODO
-1. If borrower has 0 cash when lender is trying to redeem with the correct secret, the obligation will then be DEFAULTED which the borrower must settle in the future.
-2. If borrower has some cash to settle partially when lender tries to redeem the obligation, then the obligation will have paid amount > 0.
+1. If borrower has 0 cash when lender is trying to redeem with the correct secret, the obligation will then be *DEFAULTED* which the borrower must settle in the future.
+2. If borrower has some cash to settle partially when lender tries to redeem the obligation, then the state will have a positive paid amount (larger than 0).
 3. The borrower/locker can cancel an obligation if and only if 
-    1. The obligation is not DEFAULTED
-    2. The obligation paid amount is equal to 0.
-    3. Current time is larger than release time.
-4. Lender/lockee can cancel an obligation at any time if he deems it unnecessary to receive said amount from the obligation.
+    1. The obligation is not *DEFAULTED*
+    2. The obligation paid amount is *equal* to 0.
+    3. Current time is *larger* than release time.
+4. Lender/lockee is allowed cancel an obligation at any time if he deems it unnecessary to receive said amount from the obligation.
 5. Borrower/locker can also optionally settle obligation ahead of time i.e due to real world agreements / arrangement with the counter-party.
 6. Add flexibility to choose hashing algorithm.
-
+7. Add API to redeem obligation. Right now there's only flow unit tests.
 
 ## Issue an obligation
 
