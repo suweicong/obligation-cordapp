@@ -1,24 +1,25 @@
 ![Interoperability Sequence Diagram](.README_images/sequence-diagram.png)
 
 # Network
-HTLC allows the movement of asset from one DLT to another DLT. 
+Hashed Timelock Contract (HTLC) allows the movement of asset from one DLT to another DLT. 
 * Party A: Has a Corda Node
 * Party B: Has a Corda Node and a non-corda node i.e. Fabric
 * Party C: Has a non-corda DLT node i.e. Fabric
 
+>Note: All off-ledger and non-corda operations are assumed as implemented. We will only deal with corda contracts and flows here.
+
 # How it  works
 1. Party A is trying to deposit an amount of cash to Party C in a non-corda network. Party A does not own any node in the non-corda network but Party B has nodes on both network.
-2. Party A (borrower/locker) will issue an obligation with a hashed secret and release time to Party B (lender/lockee) promising to pay the amount if and only if Party B can provide the secret within current time < release time 
-3. Party A will also send the secret to Party C's offledger.
-4. Party B will send the ID and hashed secret taken from the obligation and sends it to its own offledger.
-5. Party B's offledger will forward the ID and hashed secret to Party B's non-corda node. 
-6. Non-Corda Party B node will lock some cash with the ID and hashed secret. 
-7. Non-Corda Party C will propose to unlock and redeem the cash with the ID and secret taken from the offledger.
-8. Non-Corda Party B will receive the secret in exchange for the cash that's been transferred from Party B to Party C in the non-corda network.
-9. Non-Corda Party B will send the secret to its offledger where it will be forwarded to it its own Corda node Party B.
+2. Party A (borrower/locker) will issue an obligation with a hashed secret and release time to Party B (lender/lockee) promising to pay the amount if and only if Party B can provide the secret when current time is less than release time 
+3. Party A will also send the secret to Party C's off-ledger.
+4. Party B will send the ID and hashed secret taken from the obligation and sends it to its own off-ledger.
+5. Party B off-ledger will forward the ID and hashed secret to Party B's non-corda node. 
+6. **Non-Corda**Party B node will lock some cash with the ID and hashed secret. 
+7. **Non-Corda**Party C will propose to unlock and redeem the cash with the ID and secret taken from the off-ledger.
+8. **Non-Corda**Party B will receive the secret in exchange for the cash he transferred to Party C in the non-corda network.
+9. **Non-Corda**Party B will send the secret to its off-ledger where it will be forwarded to its own **Corda** Party B node.
 10. Party B will propose to redeem the obligation by providing the ID and secret in exchange for Party A's cash.
-
-`Note: All offledger and non-corda operations are assummed implemented. We will only deal with corda contracts and flows here.`
+11. The obligation will be settled and cash will be transferred from Party A to Party B's balance.
 
 # TODO
 1. If borrower has 0 cash when lender is trying to redeem with the correct secret, the obligation will then be DEFAULTED which the borrower must settle in the future.
@@ -28,8 +29,8 @@ HTLC allows the movement of asset from one DLT to another DLT.
     2. The obligation paid amount is equal to 0.
     3. Current time is larger than release time.
 4. Lender/lockee can cancel an obligation at any time if he deems it unnecessary to receive said amount from the obligation.
-6. Borrower/locker can also optionally settle obligation ahead of time i.e due to real world agreements / arrangement with the counter-party.
-7. Add flexibility to choose hashing algorithm.
+5. Borrower/locker can also optionally settle obligation ahead of time i.e due to real world agreements / arrangement with the counter-party.
+6. Add flexibility to choose hashing algorithm.
 
 
 ## Issue an obligation
@@ -46,8 +47,8 @@ HTLC allows the movement of asset from one DLT to another DLT.
 ## Redeem an obligation
 1. Provide the linear id and secret to the obligation.
 2. The contract will hash the secret and compare it against the hashed secret already specified in the obligation.
-2. Wait for the transaction confirmation.
-3. Cash should be transferred to the lender's balance if the secret provided is hashed to the same hashed secret in the obligation.
+3. Wait for the transaction confirmation.
+4. Cash should be transferred to the lender's balance if the secret provided is hashed to the same hashed secret in the obligation.
    
 ## Self issue some cash
 
