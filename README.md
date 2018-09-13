@@ -1,56 +1,54 @@
-![Corda](https://www.corda.net/wp-content/uploads/2016/11/fg005_corda_b.png)
-![Interoperability Sequence Diagram](images/sequence-diagram.png)
+![Interoperability Sequence Diagram](.README_images/sequence-diagram.png)
 
+# Network
+HTLC allows the movement of asset from one DLT to another DLT. 
+* Party A: Has a Corda Node
+* Party B: Has a Corda Node and a non-corda node i.e. Fabric
+* Party C: Has a non-corda DLT node i.e. Fabric
 
-# The Obligation CorDapp
+# How it  works
+1. Party A is trying to deposit an amount of cash to Party C in a non-corda network. Party A does not own any node in the non-corda network but Party B has nodes on both network.
+2. Party A (borrower/locker) will issue an obligation with a hashed secret and release time to Party B (lender/lockee) promising to pay the amount if and only if Party B can provide the secret within current time < release time 
+3. Party A will also send the secret to Party C's offledger.
+4. Party B will send the ID and hashed secret taken from the obligation and sends it to its own offledger.
+5. Party B's offledger will forward the ID and hashed secret to Party B's non-corda node. 
+6. Non-Corda Party B node will lock some cash with the ID and hashed secret. 
+7. Non-Corda Party C will propose to unlock and redeem the cash with the ID and secret taken from the offledger.
+8. Non-Corda Party B will receive the secret in exchange for the cash that's been transferred from Party B to Party C in the non-corda network.
+9. Non-Corda Party B will send the secret to its offledger where it will be forwarded to it its own Corda node Party B.
+10. Party B will propose to redeem the obligation by providing the ID and secret in exchange for Party A's cash.
 
-This CorDapp comprises a demo of an IOU-like agreement that can be issued, transfered and settled confidentially. The CorDapp includes:
+`Note: All offledger and non-corda operations are assummed implemented. We will only deal with corda contracts and flows here.`
 
-* An obligation state definition that records an amount of any currency payable from one party to another. The obligation state
-* A contract that facilitates the verification of issuance, transfer (from one lender to another) and settlement of obligations
-* Three sets of flows for issuing, transferring and settling obligations. They work with both confidential and non-confidential obligations
+# TODO
+1. If borrower has 0 cash when lender is trying to redeem with the correct secret, the obligation will then be DEFAULTED which the borrower must settle in the future.
+2. If borrower has some cash to settle partially when lender tries to redeem the obligation, then the obligation will have paid amount > 0.
+3. The borrower/locker can cancel an obligation if and only if 
+    1. The obligation is not DEFAULTED
+    2. The obligation paid amount is equal to 0.
+    3. Current time is larger than release time.
+4. Lender/lockee can cancel an obligation at any time if he deems it unnecessary to receive said amount from the obligation.
+6. Borrower/locker can also optionally settle obligation ahead of time i.e due to real world agreements / arrangement with the counter-party.
+7. Add flexibility to choose hashing algorithm.
 
-The CorDapp allows you to issue, transfer (from old lender to new lender) and settle (with cash) obligations. It also 
-comes with an API and website that allows you to do all of the aforementioned things.
-
-# Instructions for setting up
-
-1. `git clone http://github.com/roger3cev/obligation-cordapp`
-2. `cd obligation-cordapp`
-3. `./gradlew deployNodes` - building may take upto a minute (it's much quicker if you already have the Corda binaries)./r  
-4. `cd kotlin-source/build/nodes`
-5. `./runnodes`
-
-At this point you will have notary/network map node running as well as three other nodes and their corresponding webservers. There should be 7 console windows in total. One for the networkmap/notary and two for each of the three nodes. The nodes take about 20-30 seconds to finish booting up.
-
-NOTE: That the obligation and corda-finance CorDapps will automatically be installed for each node.
-
-# Using the CorDapp via the web front-end
-
-In your favourite web browers, navigate to:
-
-1. PartyA: `http://localhost:10007`
-2. PartyB: `http://localhost:10010`
-3. PartyC: `http://localhost:10013`
-
-You'll see a basic page, listing all the API end-points and static web content. Click on the "obligation" link under "static web content". The dashboard shows you a number of things:
-
-1. All issued obligations to date
-2. A button to issue a new obligation
-3. A button to self issue cash (used to settle obligations)
-4. A refresh button
 
 ## Issue an obligation
 
 1. Click on the "create IOU" button.
-2. Select the counterparty, enter in the currency (GBP) and the amount, 1000
-3. Click create IOU
+2. Select the counter-party, enter in the currency (GBP) and the amount, 1000
+3. Click create IOU with a plain text secret.
 4. Wait for the transaction confirmation
 5. Click anywhere
 6. Press the refresh button
 7. The UI should update to reflect the new obligation.
-8. Navigate to the counterparties dashboard. You should see the same obligation there. The party names show up as random public keys as they are issued confidentially. Currently the web API doesn't resolve the party names.
+8. Navigate to the counter-parties dashboard. You should see the same obligation there. The party names show up as random public keys as they are issued confidentially. Currently the web API doesn't resolve the party names.
 
+## Redeem an obligation
+1. Provide the linear id and secret to the obligation.
+2. The contract will hash the secret and compare it against the hashed secret already specified in the obligation.
+2. Wait for the transaction confirmation.
+3. Cash should be transferred to the lender's balance if the secret provided is hashed to the same hashed secret in the obligation.
+   
 ## Self issue some cash
 
 From the obligation borrowers UI:
@@ -83,14 +81,5 @@ This is a partial settlement. you can fully settle by sending another £500. The
 That's it!
 
 From the lenders UI you can transfer an obligation to a new lender. The procedure is straight-forward. Just select the Party which is to be the new lender. Refresh teh UIs to see the reflected changes.
-
-
-# TODO
-
-1. Remove references to "IOU"
-2. Resolve party names for the web front-end.
-3. Replace the Corda web server with a reactive spring boot web server
-4. Auto update the UI 
-
 
 Feel free to submit a PR.
