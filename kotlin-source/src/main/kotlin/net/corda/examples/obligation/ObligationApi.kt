@@ -58,7 +58,7 @@ class ObligationApi(val rpcOps: CordaRPCOps) {
     fun obligations(@QueryParam(value = "last") amount: Long =0): List<Obligation> {
 
         val DEFAULT_PAGE_NUM	= 1
-        val DEFAULT_PAGE_SIZE	= 5
+        val DEFAULT_PAGE_SIZE	= 1
 
         var pageNumber = DEFAULT_PAGE_NUM
         var pageSize     = DEFAULT_PAGE_SIZE
