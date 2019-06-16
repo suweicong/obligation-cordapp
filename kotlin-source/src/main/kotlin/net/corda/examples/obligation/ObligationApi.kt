@@ -1,15 +1,20 @@
 package net.corda.examples.obligation
 
 import net.corda.core.contracts.Amount
+import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.messaging.CordaRPCOps
+import net.corda.core.messaging.vaultQueryBy
+import net.corda.core.node.services.Vault
+import net.corda.core.node.services.vault.PageSpecification
+import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.utilities.OpaqueBytes
 import net.corda.core.utilities.getOrThrow
 import net.corda.examples.obligation.flows.IssueObligation
 import net.corda.examples.obligation.flows.SettleObligation
 import net.corda.examples.obligation.flows.TransferObligation
 import net.corda.finance.contracts.asset.Cash
-import net.corda.finance.contracts.getCashBalances
+import net.corda.finance.workflows.getCashBalances
 import net.corda.finance.flows.CashIssueFlow
 import java.util.*
 import javax.ws.rs.GET
@@ -50,7 +55,51 @@ class ObligationApi(val rpcOps: CordaRPCOps) {
     @GET
     @Path("obligations")
     @Produces(MediaType.APPLICATION_JSON)
-    fun obligations() = rpcOps.vaultQuery(Obligation::class.java).states
+    fun obligations(@QueryParam(value = "last") amount: Long =0): List<Obligation> {
+
+        val DEFAULT_PAGE_NUM	= 1
+        val DEFAULT_PAGE_SIZE	= 5
+
+        var pageNumber = DEFAULT_PAGE_NUM
+        var pageSize     = DEFAULT_PAGE_SIZE
+
+
+
+//        val baseCriteria = QueryCriteria.VaultCustomQueryCriteria(Vault.StateStatus.ALL)
+        val queryCriteria = QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED)
+        var txnum = amount
+        val statesAndRefs = mutableListOf<StateAndRef<Obligation>>()
+        do {
+            val pageSpec = PageSpecification(pageNumber = pageNumber, pageSize = pageSize)
+            val results = rpcOps.vaultQueryBy<Obligation>(queryCriteria, pageSpec)
+            statesAndRefs.addAll(results.states)
+            pageNumber++
+            if (amount == 0L)
+            {
+                txnum = results.totalStatesAvailable
+            }
+            else
+            {
+                txnum = amount
+            }
+        } while ((pageSpec.pageSize * (pageNumber - 1)) <= txnum)
+
+
+//        val statesAndRefs = rpcOps.vaultQuery(Obligation::class.java).states
+        return statesAndRefs
+                .map { stateAndRef -> stateAndRef.state.data }
+                .map { state ->
+                    // We map the anonymous lender and borrower to well-known identities if possible.
+                    val possiblyWellKnownLender = rpcOps.wellKnownPartyFromAnonymous(state.lender) ?: state.lender
+                    val possiblyWellKnownBorrower = rpcOps.wellKnownPartyFromAnonymous(state.borrower) ?: state.borrower
+
+                    Obligation(state.amount,
+                            possiblyWellKnownLender,
+                            possiblyWellKnownBorrower,
+                            state.paid,
+                            state.linearId)
+                }
+    }
 
     @GET
     @Path("cash")
@@ -76,9 +125,12 @@ class ObligationApi(val rpcOps: CordaRPCOps) {
         // 2. Start flow and wait for response.
         val (status, message) = try {
             val flowHandle = rpcOps.startFlowDynamic(CashIssueFlow::class.java, issueRequest)
-            val result = flowHandle.use { it.returnValue.getOrThrow() }
+            val result = flowHandle.returnValue.getOrThrow()
+            flowHandle.close()
             CREATED to result.stx.tx.outputs.single().data
         } catch (e: Exception) {
+            e.cause?.printStackTrace()
+            e.printStackTrace()
             BAD_REQUEST to e.message
         }
 
@@ -104,10 +156,11 @@ class ObligationApi(val rpcOps: CordaRPCOps) {
                     IssueObligation.Initiator::class.java,
                     issueAmount,
                     lenderIdentity,
-                    true
+                    false
             )
 
-            val result = flowHandle.use { it.returnValue.getOrThrow() }
+            val result = flowHandle.returnValue.getOrThrow()
+            flowHandle.close()
             CREATED to "Transaction id ${result.id} committed to ledger.\n${result.tx.outputs.single().data}"
         } catch (e: Exception) {
             BAD_REQUEST to e.message
@@ -133,7 +186,8 @@ class ObligationApi(val rpcOps: CordaRPCOps) {
                     true
             )
 
-            flowHandle.use { flowHandle.returnValue.getOrThrow() }
+            flowHandle.returnValue.getOrThrow()
+            flowHandle.close()
             CREATED to "Obligation $id transferred to $party."
         } catch (e: Exception) {
             BAD_REQUEST to e.message
@@ -158,7 +212,8 @@ class ObligationApi(val rpcOps: CordaRPCOps) {
                     true
             )
 
-            flowHandle.use { flowHandle.returnValue.getOrThrow() }
+            flowHandle.returnValue.getOrThrow()
+            flowHandle.close()
             CREATED to "$amount $currency paid off on obligation id $id."
         } catch (e: Exception) {
             BAD_REQUEST to e.message
